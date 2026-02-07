@@ -1,16 +1,8 @@
-import Terminal from './components/Terminal'
+import SplitLayout from './components/SplitLayout'
 
 function App() {
   return (
-    <div style={{
-      width: '100vw',
-      height: '100vh',
-      backgroundColor: '#1e1e1e',
-      padding: '20px',
-      boxSizing: 'border-box'
-    }}>
-      <Terminal />
-    </div>
+    <SplitLayout />
   )
 }
 

@@ -37,25 +37,26 @@ const commands = {
   history: cmdHistory,
   clear: cmdClear,
   help: cmdHelp,
+  lesson: cmdLesson,
 }
 
 // Command history storage (shared with Terminal.jsx via export)
 export const commandHistory = []
 
 // Execute a command and return the result
-export function executeCommand(input, currentPath) {
+export function executeCommand(input, currentPath, context = {}) {
   const parts = parseCommand(input.trim())
   const cmd = parts[0]?.toLowerCase()
   const args = parts.slice(1)
-  
+
   if (!cmd) {
     return { output: '', newPath: null }
   }
-  
+
   if (commands[cmd]) {
-    return commands[cmd](args, currentPath)
+    return commands[cmd](args, currentPath, context)
   }
-  
+
   return {
     output: `\x1b[31m${cmd}: command not found\x1b[0m\r\nType \x1b[32mhelp\x1b[0m to see available commands.`,
     newPath: null
@@ -797,6 +798,12 @@ function cmdHelp(args, currentPath) {
     '  \x1b[32mclear\x1b[0m            Clear the screen                 \x1b[90mclear\x1b[0m',
     '  \x1b[32mhelp\x1b[0m             Show this message                \x1b[90mhelp\x1b[0m',
     '',
+    '\x1b[1;36m─── Course Navigation ────────────────────────────────────────────────────────\x1b[0m',
+    '  \x1b[32mlesson <n>\x1b[0m       Go to session n                  \x1b[90mlesson 3\x1b[0m',
+    '  \x1b[32mlesson next\x1b[0m      Go to next session               \x1b[90mlesson next\x1b[0m',
+    '  \x1b[32mlesson prev\x1b[0m      Go to previous session           \x1b[90mlesson prev\x1b[0m',
+    '  \x1b[32mlesson list\x1b[0m      List all sessions                \x1b[90mlesson list\x1b[0m',
+    '',
     '\x1b[1;33m─── Keyboard Shortcuts ───────────────────────────────────────────────────────\x1b[0m',
     '  \x1b[36mTab\x1b[0m              Auto-complete commands & paths',
     '  \x1b[36m↑ / ↓\x1b[0m            Browse command history',
@@ -806,4 +813,45 @@ function cmdHelp(args, currentPath) {
     '',
   ]
   return { output: lines.join('\r\n'), newPath: null }
+}
+
+// ============== COURSE NAVIGATION ==============
+
+// LESSON - Navigate between course sessions
+function cmdLesson(args, currentPath, context) {
+  const { onSessionChange, currentSession } = context
+
+  if (args.length === 0) {
+    return {
+      output: 'Usage: lesson [1-5|next|prev|list]\r\nExamples:\r\n  lesson 1     - Go to Session 1\r\n  lesson next  - Go to next session\r\n  lesson list  - List all sessions',
+      newPath: null
+    }
+  }
+
+  const arg = args[0].toLowerCase()
+
+  if (arg === 'list') {
+    return 'Available Sessions:\n  0. Overview & Getting Started\n  1. Navigation & File System Basics\n  2. File Operations & Viewing Content\n  3. Text Processing & Searching\n  4. System Information & Processes\n  5. Permissions & Practical Workflows'
+  }
+
+  if (arg === 'next') {
+    const next = Math.min(currentSession + 1, 5)
+    if (onSessionChange) onSessionChange(next)
+    return { output: `Moved to Session ${next}`, newPath: null }
+  }
+
+  if (arg === 'prev') {
+    const prev = Math.max(currentSession - 1, 1)
+    if (onSessionChange) onSessionChange(prev)
+    return { output: `Moved to Session ${prev}`, newPath: null }
+  }
+
+  // Update the validation
+  const sessionNum = parseInt(arg)
+  if (sessionNum >= 0 && sessionNum <= 5) {
+    onSessionChange(sessionNum)
+    return `Moved to Session ${sessionNum}`
+  }
+
+  return { output: 'Invalid session. Use: lesson [1-5|next|prev|list]', newPath: null }
 }

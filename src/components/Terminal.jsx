@@ -1,20 +1,20 @@
-import { useEffect, useRef, useState } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import { Terminal as XTerm } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import 'xterm/css/xterm.css'
 import { getDirectory, resolvePath } from '../fileSystem'
 import { executeCommand, commandHistory } from '../commands'
 
-function Terminal() {
+function Terminal({ sessionRef }) {
   const terminalRef = useRef(null)
   const xtermRef = useRef(null)
   const [currentPath, setCurrentPath] = useState('/home/user')
-  
+
   // Store state in refs so callbacks can access current values
   const currentPathRef = useRef(currentPath)
   const commandHistoryRef = useRef([])
   const historyIndexRef = useRef(-1)
-  
+
   useEffect(() => {
     currentPathRef.current = currentPath
   }, [currentPath])
@@ -112,7 +112,7 @@ function Terminal() {
             return
           }
           
-          const result = executeCommand(buffer.trim(), currentPathRef.current)
+          const result = executeCommand(buffer.trim(), currentPathRef.current, { onSessionChange: sessionRef.current.set, currentSession: sessionRef.current.current })
           
           if (result.output) {
             xterm.writeln(result.output)
@@ -243,7 +243,8 @@ function Terminal() {
     const parts = buffer.split(' ')
     const commands = ['pwd', 'ls', 'cd', 'mkdir', 'touch', 'rm', 'cat', 'head', 'tail', 'less',
                       'grep', 'find', 'wc', 'echo', 'cp', 'mv', 'chmod', 'chown', 'ps', 'kill',
-                      'df', 'du', 'whoami', 'uname', 'uptime', 'date', 'history', 'clear', 'help']
+                      'df', 'du', 'whoami', 'uname', 'uptime', 'date', 'history', 'clear', 'help',
+                      'lesson']
     
     // If completing a command (first word)
     if (parts.length === 1) {
@@ -360,4 +361,4 @@ function findCommonPrefix(strings) {
   return prefix
 }
 
-export default Terminal
+export default memo(Terminal)
