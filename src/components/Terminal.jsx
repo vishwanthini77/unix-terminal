@@ -3,20 +3,21 @@ import { Terminal as XTerm } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import 'xterm/css/xterm.css'
 import { getDirectory, resolvePath } from '../fileSystem'
-import { executeCommand, commandHistory } from '../commands'
+import { executeCommand, commandHistory, pushToHistory } from '../commands'
+import { loadCurrentPath, saveCurrentPath } from '../storage'
 
 function Terminal({ sessionRef }) {
   const terminalRef = useRef(null)
   const xtermRef = useRef(null)
-  const [currentPath, setCurrentPath] = useState('/home/user')
+  const [currentPath, setCurrentPath] = useState(() => loadCurrentPath() ?? '/home/user')
 
   // Store state in refs so callbacks can access current values
   const currentPathRef = useRef(currentPath)
-  const commandHistoryRef = useRef([])
-  const historyIndexRef = useRef(-1)
+  const historyIndexRef = useRef(commandHistory.length)
 
   useEffect(() => {
     currentPathRef.current = currentPath
+    saveCurrentPath(currentPath)
   }, [currentPath])
 
   useEffect(() => {
@@ -76,13 +77,16 @@ function Terminal({ sessionRef }) {
     })
 
     // Welcome message
-    xterm.writeln('\x1b[36m╔════════════════════════════════════════════════════════╗\x1b[0m')
-    xterm.writeln('\x1b[36m║\x1b[0m   \x1b[1;33mUnix for the Rest of Us\x1b[0m                              \x1b[36m║\x1b[0m')
-    xterm.writeln('\x1b[36m║\x1b[0m   Learn Unix commands in your browser!                  \x1b[36m║\x1b[0m')
-    xterm.writeln('\x1b[36m╚════════════════════════════════════════════════════════╝\x1b[0m')
-    xterm.writeln('')
-    xterm.writeln('Type \x1b[32mhelp\x1b[0m to see available commands.')
-    xterm.writeln('')
+      xterm.writeln('\x1b[36m╔════════════════════════════════════════════════════════╗\x1b[0m')
+      xterm.writeln('\x1b[36m║\x1b[0m   \x1b[1;33mUnix for the Rest of Us\x1b[0m                              \x1b[36m║\x1b[0m')
+      xterm.writeln('\x1b[36m║\x1b[0m   Learn Unix commands in your browser!                 \x1b[36m║\x1b[0m')
+      xterm.writeln('\x1b[36m╚════════════════════════════════════════════════════════╝\x1b[0m')
+      xterm.writeln('')
+      xterm.writeln('\x1b[1;31m⚠  This is a simulated terminal for learning purposes.\x1b[0m')
+      xterm.writeln('\x1b[1;31m   Not all Unix commands are supported.\x1b[0m')
+      xterm.writeln('')
+      xterm.writeln('Type \x1b[32mhelp\x1b[0m to see available commands.')
+      xterm.writeln('')
     
     // Write initial prompt
     writePrompt(xterm, currentPathRef.current)
@@ -99,10 +103,9 @@ function Terminal({ sessionRef }) {
         xterm.writeln('')
         if (buffer.trim()) {
           // Add to history
-          commandHistoryRef.current.push(buffer)
-          commandHistory.push(buffer)
-          historyIndexRef.current = commandHistoryRef.current.length
-          
+          pushToHistory(buffer)
+          historyIndexRef.current = commandHistory.length
+
           // Handle clear command specially
           if (buffer.trim().toLowerCase() === 'clear') {
             xterm.clear()
@@ -111,13 +114,23 @@ function Terminal({ sessionRef }) {
             writePrompt(xterm, currentPathRef.current)
             return
           }
-          
+
+          // Handle reset command — reload the page after output
+          if (buffer.trim().toLowerCase() === 'reset') {
+            const result = executeCommand(buffer.trim(), currentPathRef.current, { onSessionChange: sessionRef.current.set, currentSession: sessionRef.current.current })
+            if (result.output) {
+              xterm.writeln(result.output)
+            }
+            setTimeout(() => window.location.reload(), 800)
+            return
+          }
+
           const result = executeCommand(buffer.trim(), currentPathRef.current, { onSessionChange: sessionRef.current.set, currentSession: sessionRef.current.current })
-          
+
           if (result.output) {
             xterm.writeln(result.output)
           }
-          
+
           if (result.newPath) {
             setCurrentPath(result.newPath)
             currentPathRef.current = result.newPath
@@ -158,7 +171,7 @@ function Terminal({ sessionRef }) {
         // Up arrow - previous command
         if (historyIndexRef.current > 0) {
           historyIndexRef.current--
-          buffer = commandHistoryRef.current[historyIndexRef.current] || ''
+          buffer = commandHistory[historyIndexRef.current] || ''
           cursorPos = buffer.length
           xterm.write('\x1b[2K\r')
           writePrompt(xterm, currentPathRef.current, false)
@@ -167,11 +180,11 @@ function Terminal({ sessionRef }) {
       }
       else if (data === '\x1b[B') {
         // Down arrow - next command
-        if (historyIndexRef.current < commandHistoryRef.current.length - 1) {
+        if (historyIndexRef.current < commandHistory.length - 1) {
           historyIndexRef.current++
-          buffer = commandHistoryRef.current[historyIndexRef.current] || ''
+          buffer = commandHistory[historyIndexRef.current] || ''
         } else {
-          historyIndexRef.current = commandHistoryRef.current.length
+          historyIndexRef.current = commandHistory.length
           buffer = ''
         }
         cursorPos = buffer.length
@@ -241,10 +254,10 @@ function Terminal({ sessionRef }) {
   // Tab completion handler
   const handleTabCompletion = (buffer, currentPath, xterm) => {
     const parts = buffer.split(' ')
-    const commands = ['pwd', 'ls', 'cd', 'mkdir', 'touch', 'rm', 'cat', 'head', 'tail', 'less',
+    const commands = ['pwd', 'ls', 'cd', 'tree', 'mkdir', 'touch', 'rm', 'cat', 'head', 'tail', 'less',
                       'grep', 'find', 'wc', 'echo', 'cp', 'mv', 'chmod', 'chown', 'ps', 'kill',
-                      'df', 'du', 'whoami', 'uname', 'uptime', 'date', 'history', 'clear', 'help',
-                      'lesson']
+                      'df', 'du', 'whoami', 'uname', 'uptime', 'date', 'history', 'clear', 'reset',
+                      'help', 'lesson']
     
     // If completing a command (first word)
     if (parts.length === 1) {
@@ -340,7 +353,8 @@ function Terminal({ sessionRef }) {
         height: '100%',
         borderRadius: '8px',
         overflow: 'hidden',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)',
+        paddingLeft: '16px'
       }}
     />
   )

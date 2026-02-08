@@ -1,8 +1,10 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Terminal from './Terminal';
 import './SplitLayout.css';
+import { loadCurrentSession, saveCurrentSession, loadTheme, saveTheme, resetAll } from '../storage';
+import { resetFileSystem } from '../fileSystem';
 import session0 from '../lessons/session0.md?raw';
 import session1 from '../lessons/session1.md?raw';
 import session2 from '../lessons/session2.md?raw';
@@ -11,10 +13,10 @@ import session4 from '../lessons/session4.md?raw';
 import session5 from '../lessons/session5.md?raw';
 
 function SplitLayout() {
-  const [contentWidth, setContentWidth] = useState(40);
+  const [contentWidth, setContentWidth] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
-  const [currentSession, setCurrentSession] = useState(0);
-  const [theme, setTheme] = useState('dark'); // 'dark' or 'light'
+  const [currentSession, setCurrentSession] = useState(() => loadCurrentSession() ?? 0);
+  const [theme, setTheme] = useState(() => loadTheme() ?? 'dark');
 
   // Shared ref so Terminal can read current session without re-rendering
   const sessionRef = useRef({ current: 1, set: null });
@@ -22,13 +24,36 @@ function SplitLayout() {
   sessionRef.current.set = setCurrentSession;
 
 const lessons = {
-  0.: session0,
+  0: session0,
   1: session1,
   2: session2,
   3: session3,
   4: session4,
   5: session5
 };
+
+  const lessonContentRef = useRef(null);
+
+  useEffect(() => {
+    if (lessonContentRef.current) {
+      lessonContentRef.current.scrollTop = 0;
+    }
+  }, [currentSession]);
+
+  // Persist session and theme to localStorage
+  useEffect(() => {
+    saveCurrentSession(currentSession);
+  }, [currentSession]);
+
+  useEffect(() => {
+    saveTheme(theme);
+  }, [theme]);
+
+  const handleReset = () => {
+    resetAll();
+    resetFileSystem();
+    window.location.reload();
+  };
 
   const handleMouseDown = () => setIsDragging(true);
   
@@ -70,15 +95,21 @@ const lessons = {
                 className={currentSession === num ? 'active' : ''}
                 onClick={() => setCurrentSession(num)}
                 >
-                Session {num}
+                Lesson {num}
                 </button>
             ))}
             </div>
-          <button className="theme-toggle" onClick={toggleTheme}>
-            {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
-          </button>
+          <div className="nav-actions">
+            <button className="theme-toggle" onClick={toggleTheme}>
+              {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
+            </button>
+            <button className="reset-button" onClick={handleReset}>
+            ⟲ Reset Session
+            </button>
+
+          </div>
         </div>
-        <div className="lesson-content">
+        <div className="lesson-content" ref={lessonContentRef}>
           <ReactMarkdown remarkPlugins={[remarkGfm]}>
             {lessons[currentSession]}
           </ReactMarkdown>

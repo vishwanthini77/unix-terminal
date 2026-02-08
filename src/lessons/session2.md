@@ -1,4 +1,4 @@
-# Session 2: File Operations & Viewing Content
+# Lesson 2: File Operations & Viewing Content
 
 ## What You'll Learn
 Master the commands for creating, viewing, copying, moving, and deleting files - the everyday tasks you'll need when working with code, logs, and configuration files.
@@ -173,4 +173,4 @@ ls ~/documents/               # Confirm files moved
 
 ---
 
-**Ready for Session 3? Complete these exercises first.**
+**Ready for Lesson 3? Complete these exercises first.**

@@ -1,4 +1,4 @@
-# Session 5: Permissions & Practical Workflows
+# Lesson 5: Permissions & Practical Workflows
 
 ## What You'll Learn
 Understand Unix file permissions, learn to modify access rights, and tie everything together with real-world workflows you'll use when working with engineering teams.
@@ -300,7 +300,7 @@ chmod 644 README.md             # Everyone can read, owner can edit
 
 ## Congratulations! 🎉
 
-You've completed all 5 Unix fundamentals sessions. You now know:
+You've completed all 5 Unix fundamentals lessons. You now know:
 - ✅ How to navigate the file system
 - ✅ How to manage files and view content
 - ✅ How to search and process text

@@ -19,7 +19,7 @@ This is a browser-based Unix learning platform designed for **non-technical prof
 
 ## What You'll Learn
 
-This course covers **5 essential sessions**:
+This course covers **5 essential lessons**:
 
 1. **Navigation & File System Basics** - Move around directories, understand paths
 2. **File Operations & Viewing Content** - Create, read, copy, move, and delete files
@@ -27,7 +27,7 @@ This course covers **5 essential sessions**:
 4. **System Information & Processes** - Monitor resources and manage running programs
 5. **Permissions & Practical Workflows** - Understand access rights and tie it all together
 
-**Time commitment**: ~30-45 minutes per session. Complete at your own pace.
+**Time commitment**: ~30-45 minutes per lesson. Complete at your own pace.
 
 ---
 
@@ -40,23 +40,24 @@ This course covers **5 essential sessions**:
 
 ### Navigation Options
 
-**Using the session buttons** (top of left panel):
-- Click Session 1, Session 2, etc. to switch lessons
+**Using the lesson buttons** (top of left panel):
+- Click Lesson 1, Lesson 2, etc. to switch lessons
 - Toggle between Light/Dark themes with the ☀️/🌙 button
 
 **Using terminal commands**:
 ```bash
-lesson 1        # Jump to Session 1
-lesson next     # Go to next session
-lesson prev     # Go to previous session
-lesson list     # See all available sessions
+lesson 1        # Jump to Lesson 1
+lesson next     # Go to next lesson
+lesson prev     # Go to previous lesson
+lesson list     # See all available lessons
 ```
+*Note: These are not Unix command but are command created for users to navigate the course better*
 
 ### Learning Approach
 
 1. **Read** the lesson content on the left
 2. **Try** the commands in the terminal on the right
-3. **Complete** the practice exercises at the end of each session
+3. **Complete** the practice exercises at the end of each lesson
 4. **Apply** the real-world scenarios to understand practical use cases
 
 **Pro tip**: Don't just read - actually type the commands. Muscle memory matters!
@@ -106,10 +107,10 @@ ls              # List files
 
 **Ready to begin?**
 
-1. Click **Session 1** button above (or type `lesson 1` in the terminal)
+1. Click **Lesson 1** button above (or type `lesson 1` in the terminal)
 2. Read through the content
 3. Practice each command as you go
-4. Complete the exercises before moving to the next session
+4. Complete the exercises before moving to the next lesson
 
 **No rush.** Take breaks. Come back anytime - the platform remembers your progress within this browser session.
 
@@ -127,6 +128,6 @@ ls              # List files
 
 ## Ready?
 
-**Click Session 1 or type `lesson 1` in the terminal to start learning!**
+**Click Lesson 1 or type `lesson 1` in the terminal to start learning!**
 
 Good luck! 🚀

@@ -1,4 +1,4 @@
-# Session 4: System Information & Processes
+# Lesson 4: System Information & Processes
 
 ## What You'll Learn
 Understand how to check system resources, monitor running processes, and get system information - essential for troubleshooting performance issues and understanding server environments.
@@ -230,4 +230,4 @@ top                                  # Live monitoring (press q to quit)
 
 ---
 
-**Ready for Session 5? Complete these exercises first.**
+**Ready for Lesson 5? Complete these exercises first.**

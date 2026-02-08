@@ -1,4 +1,5 @@
-import { getDirectory, getNode, resolvePath, isDirectory, pathExists, addNode, removeNode, getParentPath } from './fileSystem'
+import { getDirectory, getNode, resolvePath, isDirectory, pathExists, addNode, removeNode, getParentPath, saveFileSystemState, resetFileSystem } from './fileSystem'
+import { loadCommandHistory, saveCommandHistory, resetAll } from './storage'
 
 // Command registry
 const commands = {
@@ -6,6 +7,7 @@ const commands = {
   pwd: cmdPwd,
   ls: cmdLs,
   cd: cmdCd,
+  tree: cmdTree,
   // File Operations
   cat: cmdCat,
   head: cmdHead,
@@ -36,12 +38,20 @@ const commands = {
   date: cmdDate,
   history: cmdHistory,
   clear: cmdClear,
+  reset: cmdReset,
   help: cmdHelp,
   lesson: cmdLesson,
 }
 
-// Command history storage (shared with Terminal.jsx via export)
-export const commandHistory = []
+// Command history — hydrated from localStorage, shared with Terminal.jsx
+const stored = loadCommandHistory()
+export const commandHistory = stored || []
+
+// Push a command to history and persist
+export function pushToHistory(cmd) {
+  commandHistory.push(cmd)
+  saveCommandHistory(commandHistory)
+}
 
 // Execute a command and return the result
 export function executeCommand(input, currentPath, context = {}) {
@@ -108,15 +118,21 @@ function cmdLs(args, currentPath) {
   let targetPath = currentPath
   let showHidden = false
   let showLong = false
-  
+  let humanReadable = false
+
   for (const arg of args) {
-    if (arg === '-a' || arg === '-la' || arg === '-al') showHidden = true
-    if (arg === '-l' || arg === '-la' || arg === '-al') showLong = true
-    if (!arg.startsWith('-')) targetPath = resolvePath(currentPath, arg)
+    if (arg.startsWith('-')) {
+      const flags = arg.slice(1)
+      if (flags.includes('a')) showHidden = true
+      if (flags.includes('l')) showLong = true
+      if (flags.includes('h')) humanReadable = true
+    } else {
+      targetPath = resolvePath(currentPath, arg)
+    }
   }
-  
+
   const contents = getDirectory(targetPath)
-  
+
   if (contents === null) {
     const node = getNode(targetPath)
     if (node && node.type === 'file') {
@@ -127,11 +143,11 @@ function cmdLs(args, currentPath) {
       newPath: null
     }
   }
-  
+
   let entries = Object.keys(contents)
   if (!showHidden) entries = entries.filter(name => !name.startsWith('.'))
   if (entries.length === 0) return { output: '', newPath: null }
-  
+
   entries.sort((a, b) => {
     const aIsDir = contents[a].type === 'directory'
     const bIsDir = contents[b].type === 'directory'
@@ -139,18 +155,20 @@ function cmdLs(args, currentPath) {
     if (!aIsDir && bIsDir) return 1
     return a.localeCompare(b)
   })
-  
+
   if (showLong) {
     const lines = entries.map(name => {
       const node = contents[name]
       const isDir = node.type === 'directory'
       const perms = node.permissions || (isDir ? 'drwxr-xr-x' : '-rw-r--r--')
+      const links = node.links || (isDir ? Object.keys(node.children || {}).length + 2 : 1)
       const owner = node.owner || 'user'
-      const group = node.group || 'user'
-      const size = isDir ? '4096' : (node.content?.length || 0).toString().padStart(5)
-      const date = 'Jan 31 10:00'
+      const group = node.group || 'group'
+      const rawSize = isDir ? (node.size || 4096) : (node.size || node.content?.length || 0)
+      const size = humanReadable ? formatSize(rawSize) : rawSize.toString()
+      const date = node.date || 'Jan 31 10:00'
       const coloredName = isDir ? `\x1b[34m${name}\x1b[0m` : name
-      return `${perms}  1 ${owner} ${group} ${size} ${date} ${coloredName}`
+      return `${perms}  ${links} ${owner} ${group}  ${size.padStart(6)} ${date} ${coloredName}`
     })
     return { output: lines.join('\r\n'), newPath: null }
   } else {
@@ -160,6 +178,13 @@ function cmdLs(args, currentPath) {
     })
     return { output: coloredEntries.join('  '), newPath: null }
   }
+}
+
+function formatSize(bytes) {
+  if (bytes < 1024) return bytes + 'B'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1).replace(/\.0$/, '') + 'K'
+  if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1).replace(/\.0$/, '') + 'M'
+  return (bytes / (1024 * 1024 * 1024)).toFixed(1).replace(/\.0$/, '') + 'G'
 }
 
 // CD - Change Directory
@@ -179,6 +204,112 @@ function cmdCd(args, currentPath) {
   }
   
   return { output: '', newPath: targetPath }
+}
+
+// TREE - Display directory tree
+function cmdTree(args, currentPath) {
+  let targetPath = currentPath
+  let maxDepth = Infinity
+  let dirsOnly = false
+  let showHidden = false
+
+  // Parse arguments
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '-L' && args[i + 1]) {
+      maxDepth = parseInt(args[i + 1]) || Infinity
+      i++
+    } else if (args[i].startsWith('-')) {
+      const flags = args[i].slice(1)
+      if (flags.includes('d')) dirsOnly = true
+      if (flags.includes('a')) showHidden = true
+    } else {
+      targetPath = resolvePath(currentPath, args[i])
+    }
+  }
+
+  const node = getNode(targetPath)
+  if (!node) {
+    return {
+      output: `\x1b[31mtree: '${args[0] || targetPath}': No such file or directory\x1b[0m`,
+      newPath: null
+    }
+  }
+  if (node.type !== 'directory') {
+    return {
+      output: `\x1b[31mtree: '${args[0] || targetPath}': Not a directory\x1b[0m`,
+      newPath: null
+    }
+  }
+
+  const lines = []
+  let dirCount = 0
+  let fileCount = 0
+
+  // Display root directory name
+  const rootName = targetPath === '/' ? '/' : targetPath.split('/').pop() || '/'
+  lines.push(`\x1b[34m${rootName}\x1b[0m`)
+
+  function buildTree(path, prefix, depth) {
+    if (depth >= maxDepth) return
+
+    const contents = getDirectory(path)
+    if (!contents) return
+
+    let entries = Object.keys(contents)
+
+    // Filter hidden files
+    if (!showHidden) {
+      entries = entries.filter(name => !name.startsWith('.'))
+    }
+
+    // Filter directories only
+    if (dirsOnly) {
+      entries = entries.filter(name => contents[name].type === 'directory')
+    }
+
+    // Sort: directories first, then alphabetical
+    entries.sort((a, b) => {
+      const aIsDir = contents[a].type === 'directory'
+      const bIsDir = contents[b].type === 'directory'
+      if (aIsDir && !bIsDir) return -1
+      if (!aIsDir && bIsDir) return 1
+      return a.localeCompare(b)
+    })
+
+    entries.forEach((name, index) => {
+      const isLast = index === entries.length - 1
+      const connector = isLast ? '└── ' : '├── '
+      const childPrefix = isLast ? '    ' : '│   '
+      const entry = contents[name]
+      const isDir = entry.type === 'directory'
+
+      if (isDir) {
+        dirCount++
+        lines.push(`${prefix}${connector}\x1b[34m${name}\x1b[0m`)
+        const childPath = path === '/' ? `/${name}` : `${path}/${name}`
+        buildTree(childPath, prefix + childPrefix, depth + 1)
+      } else {
+        fileCount++
+        lines.push(`${prefix}${connector}${name}`)
+      }
+    })
+  }
+
+  buildTree(targetPath, '', 0)
+
+  // Summary line
+  const dirText = dirCount === 1 ? '1 directory' : `${dirCount} directories`
+  const fileText = fileCount === 1 ? '1 file' : `${fileCount} files`
+
+  if (dirsOnly) {
+    lines.push('')
+    lines.push(`${dirText}`)
+  } else {
+    lines.push('')
+    lines.push(`${dirText}, ${fileText}`)
+  }
+
+  return { output: lines.join('\r\n'), newPath: null }
 }
 
 // ============== FILE OPERATIONS ==============
@@ -698,8 +829,9 @@ function cmdChmod(args, currentPath) {
     const perms = (node.type === 'directory' ? 'd' : '-') +
       modeMap[mode[0]] + modeMap[mode[1]] + modeMap[mode[2]]
     node.permissions = perms
+    saveFileSystemState()
   }
-  
+
   return { output: '', newPath: null }
 }
 
@@ -721,7 +853,8 @@ function cmdChown(args, currentPath) {
   const parts = owner.split(':')
   node.owner = parts[0]
   if (parts[1]) node.group = parts[1]
-  
+  saveFileSystemState()
+
   return { output: '', newPath: null }
 }
 
@@ -748,6 +881,18 @@ function cmdClear(args, currentPath) {
   return { output: '\x1b[2J\x1b[H', newPath: null }
 }
 
+// RESET - Reset everything to initial state
+function cmdReset(args, currentPath) {
+  resetAll()
+  resetFileSystem()
+  commandHistory.length = 0
+
+  return {
+    output: '\x1b[33mProgress reset to initial state. Refreshing page...\x1b[0m',
+    newPath: '/home/user'
+  }
+}
+
 // HELP - Show available commands
 function cmdHelp(args, currentPath) {
   const lines = [
@@ -760,6 +905,7 @@ function cmdHelp(args, currentPath) {
     '  \x1b[32mpwd\x1b[0m              Print working directory         \x1b[90mpwd\x1b[0m',
     '  \x1b[32mls\x1b[0m               List directory contents          \x1b[90mls -la\x1b[0m',
     '  \x1b[32mcd <path>\x1b[0m        Change directory                 \x1b[90mcd documents\x1b[0m  \x1b[90mcd ..\x1b[0m  \x1b[90mcd ~\x1b[0m',
+    '  \x1b[32mtree\x1b[0m             Show directory tree               \x1b[90mtree -L 2\x1b[0m  \x1b[90mtree -d\x1b[0m  \x1b[90mtree -a\x1b[0m',
     '',
     '\x1b[1;36m─── File Operations ──────────────────────────────────────────────────────────\x1b[0m',
     '  \x1b[32mcat <file>\x1b[0m       Display file contents            \x1b[90mcat notes.txt\x1b[0m',
@@ -797,12 +943,13 @@ function cmdHelp(args, currentPath) {
     '  \x1b[32mhistory\x1b[0m          Show command history             \x1b[90mhistory\x1b[0m',
     '  \x1b[32mclear\x1b[0m            Clear the screen                 \x1b[90mclear\x1b[0m',
     '  \x1b[32mhelp\x1b[0m             Show this message                \x1b[90mhelp\x1b[0m',
+    '  \x1b[32mreset\x1b[0m            Reset to initial state           \x1b[90mreset\x1b[0m',
     '',
     '\x1b[1;36m─── Course Navigation ────────────────────────────────────────────────────────\x1b[0m',
-    '  \x1b[32mlesson <n>\x1b[0m       Go to session n                  \x1b[90mlesson 3\x1b[0m',
-    '  \x1b[32mlesson next\x1b[0m      Go to next session               \x1b[90mlesson next\x1b[0m',
-    '  \x1b[32mlesson prev\x1b[0m      Go to previous session           \x1b[90mlesson prev\x1b[0m',
-    '  \x1b[32mlesson list\x1b[0m      List all sessions                \x1b[90mlesson list\x1b[0m',
+    '  \x1b[32mlesson <n>\x1b[0m       Go to lesson n                   \x1b[90mlesson 3\x1b[0m',
+    '  \x1b[32mlesson next\x1b[0m      Go to next lesson                \x1b[90mlesson next\x1b[0m',
+    '  \x1b[32mlesson prev\x1b[0m      Go to previous lesson            \x1b[90mlesson prev\x1b[0m',
+    '  \x1b[32mlesson list\x1b[0m      List all lessons                 \x1b[90mlesson list\x1b[0m',
     '',
     '\x1b[1;33m─── Keyboard Shortcuts ───────────────────────────────────────────────────────\x1b[0m',
     '  \x1b[36mTab\x1b[0m              Auto-complete commands & paths',
@@ -817,13 +964,13 @@ function cmdHelp(args, currentPath) {
 
 // ============== COURSE NAVIGATION ==============
 
-// LESSON - Navigate between course sessions
+// LESSON - Navigate between course lessons
 function cmdLesson(args, currentPath, context) {
   const { onSessionChange, currentSession } = context
 
   if (args.length === 0) {
     return {
-      output: 'Usage: lesson [1-5|next|prev|list]\r\nExamples:\r\n  lesson 1     - Go to Session 1\r\n  lesson next  - Go to next session\r\n  lesson list  - List all sessions',
+      output: 'Usage: lesson [1-5|next|prev|list]\r\nExamples:\r\n  lesson 1     - Go to Lesson 1\r\n  lesson next  - Go to next lesson\r\n  lesson list  - List all lessons',
       newPath: null
     }
   }
@@ -831,27 +978,29 @@ function cmdLesson(args, currentPath, context) {
   const arg = args[0].toLowerCase()
 
   if (arg === 'list') {
-    return 'Available Sessions:\n  0. Overview & Getting Started\n  1. Navigation & File System Basics\n  2. File Operations & Viewing Content\n  3. Text Processing & Searching\n  4. System Information & Processes\n  5. Permissions & Practical Workflows'
+    return {
+      output: 'Available Lessons:\r\n  0. Overview & Getting Started\r\n  1. Navigation & File System Basics\r\n  2. File Operations & Viewing Content\r\n  3. Text Processing & Searching\r\n  4. System Information & Processes\r\n  5. Permissions & Practical Workflows',
+      newPath: null
+    }
   }
 
   if (arg === 'next') {
     const next = Math.min(currentSession + 1, 5)
     if (onSessionChange) onSessionChange(next)
-    return { output: `Moved to Session ${next}`, newPath: null }
+    return { output: `Moved to Lesson ${next}`, newPath: null }
   }
 
   if (arg === 'prev') {
     const prev = Math.max(currentSession - 1, 1)
     if (onSessionChange) onSessionChange(prev)
-    return { output: `Moved to Session ${prev}`, newPath: null }
+    return { output: `Moved to Lesson ${prev}`, newPath: null }
   }
 
-  // Update the validation
   const sessionNum = parseInt(arg)
   if (sessionNum >= 0 && sessionNum <= 5) {
-    onSessionChange(sessionNum)
-    return `Moved to Session ${sessionNum}`
+    if (onSessionChange) onSessionChange(sessionNum)
+    return { output: `Moved to Lesson ${sessionNum}`, newPath: null }
   }
 
-  return { output: 'Invalid session. Use: lesson [1-5|next|prev|list]', newPath: null }
+  return { output: 'Invalid lesson. Use: lesson [1-5|next|prev|list]', newPath: null }
 }

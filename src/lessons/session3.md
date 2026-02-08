@@ -1,4 +1,4 @@
-# Session 3: Text Processing & Searching
+# Lesson 3: Text Processing & Searching
 
 ## What You'll Learn
 Learn to search for files, find text patterns, count data, and process text - critical skills for finding information quickly in logs, code, and configuration files.
@@ -208,4 +208,4 @@ find /tmp -name "*.tmp" -mtime +7 -delete  # Delete them
 
 ---
 
-**Ready for Session 4? Complete these exercises first.**
+**Ready for Lesson 4? Complete these exercises first.**
