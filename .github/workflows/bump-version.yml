@@ -1,0 +1,45 @@
+name: Bump patch version
+
+on:
+  push:
+    branches: [main]
+
+# Prevent the version bump commit from triggering another run
+concurrency:
+  group: version-bump
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    # Skip if the last commit was already a version bump (prevents infinite loop)
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Bump patch version
+        run: |
+          # Read current version
+          CURRENT=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT"
+
+          # Bump patch using npm (no git tag)
+          NEW=$(npm version patch --no-git-tag-version)
+          echo "New version: $NEW"
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "chore: bump version to $(node -p \"require('./package.json').version\") [skip ci]"
+          git push

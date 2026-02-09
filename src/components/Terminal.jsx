@@ -39,7 +39,7 @@ function Terminal({ sessionRef }) {
         white: '#d4d4d4',
       },
       fontFamily: '"Fira Code", "Cascadia Code", Menlo, Monaco, monospace',
-      fontSize: 14,
+      fontSize: window.innerWidth <= 768 ? 12 : 14,
       lineHeight: 1.2,
       cursorBlink: true,
       cursorStyle: 'block',
@@ -76,7 +76,10 @@ function Terminal({ sessionRef }) {
       xterm.write(text)
     })
 
-    // Welcome message
+    // Welcome message — adapts to terminal width
+    const cols = xterm.cols
+    if (cols >= 58) {
+      // Desktop: full-width banner box
       xterm.writeln('\x1b[36m╔════════════════════════════════════════════════════════╗\x1b[0m')
       xterm.writeln('\x1b[36m║\x1b[0m   \x1b[1;33mUnix for the Rest of Us\x1b[0m                              \x1b[36m║\x1b[0m')
       xterm.writeln('\x1b[36m║\x1b[0m   Learn Unix commands in your browser!                 \x1b[36m║\x1b[0m')
@@ -84,9 +87,17 @@ function Terminal({ sessionRef }) {
       xterm.writeln('')
       xterm.writeln('\x1b[1;31m⚠  This is a simulated terminal for learning purposes.\x1b[0m')
       xterm.writeln('\x1b[1;31m   Not all Unix commands are supported.\x1b[0m')
+    } else {
+      // Mobile: compact banner without box
+      xterm.writeln('\x1b[1;33mUnix for the Rest of Us\x1b[0m')
+      xterm.writeln('\x1b[36mLearn Unix in your browser!\x1b[0m')
       xterm.writeln('')
-      xterm.writeln('Type \x1b[32mhelp\x1b[0m to see available commands.')
-      xterm.writeln('')
+      xterm.writeln('\x1b[1;31m⚠ Simulated terminal.\x1b[0m')
+      xterm.writeln('\x1b[1;31m  Not all commands supported.\x1b[0m')
+    }
+    xterm.writeln('')
+    xterm.writeln('Type \x1b[32mhelp\x1b[0m for commands.')
+    xterm.writeln('')
     
     // Write initial prompt
     writePrompt(xterm, currentPathRef.current)
@@ -354,7 +365,7 @@ function Terminal({ sessionRef }) {
         borderRadius: '8px',
         overflow: 'hidden',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)',
-        paddingLeft: '16px'
+        paddingLeft: window.innerWidth <= 768 ? '4px' : '16px'
       }}
     />
   )
