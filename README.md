@@ -1,72 +1,119 @@
-# Unix Terminal Starter - Setup Instructions
+# Unix for the Rest of Us
 
-## Quick Start (5 minutes)
+A browser-based interactive Unix terminal learning platform designed for non-technical professionals — product managers, delivery managers, and anyone who works alongside engineers and wants to understand Unix fundamentals.
 
-### Step 1: Create the project
-```bash
-npm create vite@latest unix-terminal -- --template react
-cd unix-terminal
-```
+**No setup required.** Everything runs in the browser. No installations, no accounts, no complexity.
 
-### Step 2: Install dependencies
-```bash
-npm install
-npm install xterm xterm-addon-fit
-```
+## Features
 
-### Step 3: Replace the src folder
-Delete everything in the `src/` folder, then copy all files from this download into `src/`:
+- **Simulated Unix Terminal** — A fully interactive terminal powered by [xterm.js](https://xtermjs.org/) with 25+ commands
+- **5 Structured Lessons** — Progressive curriculum from basic navigation to system administration
+- **Persistent Progress** — File system changes, command history, current lesson, theme, and working directory are saved to localStorage and survive page refreshes
+- **Dark / Light Theme** — Toggle between themes; preference is persisted
+- **Mobile Responsive** — Tabbed layout on screens ≤ 768px to switch between Lesson and Terminal views
+- **Feedback System** — Built-in feedback modal powered by [Formspree](https://formspree.io/)
+- **Reset** — Reset all progress via the UI button or the `reset` terminal command
+
+## Supported Commands
+
+| Category | Commands |
+|----------|----------|
+| **Navigation** | `pwd`, `ls`, `cd`, `tree` |
+| **File Operations** | `cat`, `head`, `tail`, `less`, `touch`, `mkdir`, `rm`, `cp`, `mv` |
+| **Search & Text** | `grep`, `find`, `wc`, `echo` |
+| **System Info** | `whoami`, `ps`, `kill`, `df`, `du`, `uname`, `uptime` |
+| **Permissions** | `chmod`, `chown` |
+| **Utilities** | `date`, `history`, `clear`, `reset`, `help`, `lesson` |
+
+## Lessons
+
+| # | Topic |
+|---|-------|
+| 0 | Overview — What this course is and who it's for |
+| 1 | Navigation & File System Basics (`pwd`, `ls`, `cd`, `tree`) |
+| 2 | File Operations (`cat`, `head`, `tail`, `touch`, `mkdir`, `rm`, `cp`, `mv`) |
+| 3 | Search & Text Processing (`grep`, `find`, `wc`, `echo`) |
+| 4 | Permissions & System Info (`chmod`, `chown`, `ps`, `df`, `du`) |
+| 5 | Putting It All Together — Real-world scenarios and combined workflows |
+
+## Tech Stack
+
+- **React 19** — UI framework
+- **Vite 7** — Build tool and dev server
+- **xterm.js 5** — Terminal emulator with FitAddon for responsive sizing
+- **react-markdown** + **remark-gfm** — Markdown rendering for lesson content
+- **@formspree/react** — Feedback form submission
+- **localStorage** — Client-side persistence (no backend required)
+
+## Project Structure
 
 ```
 src/
-├── App.jsx
-├── main.jsx
-├── index.css
-├── commands.js
-├── fileSystem.js
-└── components/
-    └── Terminal.jsx
+  App.jsx                  # Root component
+  main.jsx                 # Entry point
+  index.css                # Global styles
+  fileSystem.js            # Simulated Unix file system with persistence
+  commands.js              # Command registry and implementations (25+ commands)
+  storage.js               # localStorage persistence utility
+  components/
+    SplitLayout.jsx        # Main layout: lesson panel + terminal panel
+    SplitLayout.css        # Layout styles, themes, mobile responsive
+    Terminal.jsx            # xterm.js terminal wrapper
+  lessons/
+    session0.md            # Overview
+    session1.md            # Lesson 1: Navigation
+    session2.md            # Lesson 2: File Operations
+    session3.md            # Lesson 3: Search & Text
+    session4.md            # Lesson 4: Permissions & System
+    session5.md            # Lesson 5: Putting It All Together
 ```
 
-### Step 4: Run the dev server
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- npm
+
+### Install & Run
+
 ```bash
+npm install
 npm run dev
 ```
 
-Open http://localhost:5173 in your browser!
+Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-## What You Have
-
-- **Working terminal** with xterm.js
-- **3 commands**: `pwd`, `ls`, `cd`
-- **Bonus commands**: `help`, `clear`
-- **Simulated file system** with directories and files
-- **Beautiful styling** with colored output
-
-## Try These Commands
+### Build for Production
 
 ```bash
-pwd                  # See current directory
-ls                   # List files
-ls -a                # Show hidden files
-ls -l                # Long format
-cd documents         # Change to documents
-cd ..                # Go back up
-cd ~                 # Go home
-help                 # See all commands
-clear                # Clear screen
+npm run build
+npm run preview
 ```
 
-## File Structure Explained
+## Versioning
 
-- `App.jsx` - Main app wrapper
-- `Terminal.jsx` - The terminal UI component
-- `commands.js` - All command implementations
-- `fileSystem.js` - Simulated Unix file system
+The app version is defined in `package.json` (`"version"`) and displayed in the top navigation bar. Vite injects it at build time via the `__APP_VERSION__` global defined in `vite.config.js`.
 
-## Next Steps (Hour 2+)
+To update the version:
 
-1. Add more commands: `mkdir`, `touch`, `rm`
-2. Add tab completion
-3. Add command history (up/down arrows)
-4. Deploy to Vercel
+1. Change `"version"` in `package.json`
+2. Rebuild — the UI will reflect the new version automatically
+
+## Persistence
+
+All user progress is stored in localStorage under the `unix-terminal:` namespace:
+
+| Key | What it stores |
+|-----|---------------|
+| `unix-terminal:fileSystem` | Full file system tree (files/folders created by the user) |
+| `unix-terminal:currentPath` | Current working directory |
+| `unix-terminal:currentSession` | Active lesson number (0-5) |
+| `unix-terminal:theme` | Dark or light theme preference |
+| `unix-terminal:commandHistory` | Command history (capped at 500) |
+
+Use the **Reset Session** button or run `reset` in the terminal to clear all saved data.
+
+## License
+
+MIT

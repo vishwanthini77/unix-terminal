@@ -135,6 +135,23 @@
   display: flex;
   gap: 8px;
   margin-left: auto;
+  align-items: center;
+}
+
+/* Version badge */
+.version-badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #888;
+  font-family: 'Courier New', monospace;
+  user-select: none;
+}
+
+.split-layout.theme-light .version-badge {
+  background: rgba(0, 0, 0, 0.06);
+  color: #999;
 }
 
 .reset-button {

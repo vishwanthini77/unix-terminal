@@ -171,6 +171,7 @@ const lessons = {
             ))}
             </div>
           <div className="nav-actions">
+            <span className="version-badge">v{__APP_VERSION__}</span>
             <button className="feedback-button" onClick={() => setShowFeedback(true)}>
             💬 Feedback
             </button>
