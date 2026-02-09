@@ -303,3 +303,258 @@
 .split-layout.theme-light .lesson-content hr {
   border-top: 1px solid #d0d7de;
 }
+/* Feedback button */
+.feedback-button {
+  font-size: 12px !important;
+  padding: 6px 12px !important;
+  background: #28a745 !important;
+  border-color: #28a745 !important;
+  color: #fff !important;
+  opacity: 0.85;
+}
+
+.feedback-button:hover {
+  opacity: 1;
+  background: #218838 !important;
+  border-color: #218838 !important;
+}
+
+/* Feedback modal */
+.feedback-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.feedback-modal {
+  background: #1e1e1e;
+  border: 1px solid #444;
+  border-radius: 8px;
+  padding: 24px;
+  width: 450px;
+  max-width: 90vw;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.feedback-modal h3 {
+  margin: 0 0 16px 0;
+  color: #e0e0e0;
+  font-size: 18px;
+}
+
+.feedback-submit {
+  padding: 8px 20px;
+  border-radius: 4px;
+  border: none;
+  background: #28a745;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.feedback-submit:hover {
+  background: #218838;
+}
+
+.feedback-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.feedback-cancel {
+  padding: 8px 20px;
+  border-radius: 4px;
+  border: 1px solid #555;
+  background: transparent;
+  color: #e0e0e0;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.feedback-cancel:hover {
+  background: #333;
+}
+
+/* Light theme feedback modal */
+.split-layout.theme-light .feedback-modal {
+  background: #ffffff;
+  border-color: #ddd;
+}
+
+.split-layout.theme-light .feedback-modal h3,
+.split-layout.theme-light .feedback-modal p {
+  color: #333;
+}
+
+.split-layout.theme-light .feedback-modal textarea {
+  background: #f6f8fa !important;
+  color: #333 !important;
+  border-color: #ddd !important;
+}
+
+.split-layout.theme-light .feedback-cancel {
+  color: #333;
+  border-color: #ddd;
+}
+
+.split-layout.theme-light .feedback-cancel:hover {
+  background: #f0f0f0;
+}
+
+/* ===== MOBILE RESPONSIVE (≤ 768px) ===== */
+@media (max-width: 768px) {
+
+  /* Stack panels vertically */
+  .split-layout {
+    flex-direction: column;
+  }
+
+  /* Hide inactive panel */
+  .mobile-hidden {
+    display: none !important;
+  }
+
+  /* Hide the draggable divider */
+  .divider {
+    display: none;
+  }
+
+  /* Mobile tab bar */
+  .mobile-tab-bar {
+    display: flex;
+    flex-shrink: 0;
+    height: 44px;
+    border-bottom: 1px solid #444;
+    background: #2d2d2d;
+  }
+
+  .mobile-tab-bar button {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: #999;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-bottom: 3px solid transparent;
+  }
+
+  .mobile-tab-bar button.active {
+    color: #e0e0e0;
+    border-bottom-color: #007bff;
+    background: rgba(0, 123, 255, 0.08);
+  }
+
+  /* Light theme tab bar */
+  .split-layout.theme-light .mobile-tab-bar {
+    background: #f8f8f8;
+    border-bottom-color: #ddd;
+  }
+
+  .split-layout.theme-light .mobile-tab-bar button {
+    color: #999;
+  }
+
+  .split-layout.theme-light .mobile-tab-bar button.active {
+    color: #333;
+    border-bottom-color: #007bff;
+    background: rgba(0, 123, 255, 0.06);
+  }
+
+  /* Panels take full width and remaining height */
+  .content-panel,
+  .terminal-panel {
+    width: 100% !important;
+    height: calc(100vh - 44px) !important;
+  }
+
+  /* Session nav — stack and compact */
+  .session-nav {
+    flex-wrap: wrap;
+    padding: 10px;
+    gap: 8px;
+  }
+
+  /* Lesson buttons — horizontal scroll */
+  .session-buttons {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    gap: 6px;
+    padding-bottom: 4px;
+  }
+
+  .session-nav button {
+    padding: 6px 10px;
+    font-size: 12px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Action buttons — center below lesson buttons */
+  .nav-actions {
+    width: 100%;
+    justify-content: center;
+    margin-left: 0;
+  }
+
+  /* Lesson content — reduce padding */
+  .lesson-content {
+    padding: 16px;
+  }
+
+  .lesson-content h1 {
+    font-size: 22px;
+    margin-bottom: 12px;
+  }
+
+  .lesson-content h2 {
+    font-size: 18px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+  }
+
+  .lesson-content h3 {
+    font-size: 16px;
+    margin-top: 16px;
+    margin-bottom: 8px;
+  }
+
+  .lesson-content code {
+    font-size: 12px;
+  }
+
+  .lesson-content pre {
+    padding: 12px;
+    font-size: 12px;
+    margin: 12px 0;
+  }
+
+  .lesson-content ul, .lesson-content ol {
+    padding-left: 1em;
+  }
+
+  /* Terminal — reduce padding on mobile */
+  .terminal-panel {
+    padding: 0;
+  }
+
+  /* Feedback modal — fit mobile screens */
+  .feedback-modal {
+    width: 92vw;
+    padding: 20px;
+  }
+
+  .feedback-modal h3 {
+    font-size: 16px;
+  }
+}

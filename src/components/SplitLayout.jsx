@@ -11,12 +11,59 @@ import session2 from '../lessons/session2.md?raw';
 import session3 from '../lessons/session3.md?raw';
 import session4 from '../lessons/session4.md?raw';
 import session5 from '../lessons/session5.md?raw';
+import { useForm, ValidationError } from '@formspree/react';
 
+function FeedbackForm({ onClose }) {
+  const [state, handleSubmit] = useForm("xykdylan"); // ← Replace with your Formspree form ID from the snippet
+
+  if (state.succeeded) {
+    return (
+      <div style={{ textAlign: 'center', padding: '20px' }}>
+        <p style={{ fontSize: '18px', marginBottom: '16px', color: '#e0e0e0' }}>✅ Thanks for your feedback!</p>
+        <button className="feedback-submit" onClick={onClose}>Close</button>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <textarea
+        id="message"
+        name="message"
+        placeholder="What's on your mind? Suggestions, bugs, or anything else..."
+        rows={5}
+        required
+        style={{
+          width: '100%',
+          padding: '12px',
+          borderRadius: '6px',
+          border: '1px solid #555',
+          background: '#2d2d2d',
+          color: '#e0e0e0',
+          fontSize: '14px',
+          resize: 'vertical',
+          fontFamily: 'inherit',
+          boxSizing: 'border-box',
+        }}
+      />
+      <ValidationError prefix="Message" field="message" errors={state.errors} />
+      <div style={{ display: 'flex', gap: '8px', marginTop: '12px', justifyContent: 'flex-end' }}>
+        <button type="button" className="feedback-cancel" onClick={onClose}>Cancel</button>
+        <button type="submit" className="feedback-submit" disabled={state.submitting}>
+          {state.submitting ? 'Sending...' : 'Send Feedback'}
+        </button>
+      </div>
+    </form>
+  );
+}
 function SplitLayout() {
   const [contentWidth, setContentWidth] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
   const [currentSession, setCurrentSession] = useState(() => loadCurrentSession() ?? 0);
+  const [showFeedback, setShowFeedback] = useState(false);
   const [theme, setTheme] = useState(() => loadTheme() ?? 'dark');
+  const [activeTab, setActiveTab] = useState('lesson');
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
 
   // Shared ref so Terminal can read current session without re-rendering
   const sessionRef = useRef({ current: 1, set: null });
@@ -49,6 +96,14 @@ const lessons = {
     saveTheme(theme);
   }, [theme]);
 
+  // Detect mobile viewport
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const handler = (e) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
   const handleReset = () => {
     resetAll();
     resetFileSystem();
@@ -72,14 +127,30 @@ const lessons = {
   };
 
   return (
-    <div 
-      className={`split-layout theme-${theme}`}
+    <div
+      className={`split-layout theme-${theme}${isMobile ? ' mobile' : ''}`}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
     >
-      <div 
-        className="content-panel"
-        style={{ width: `${contentWidth}%` }}
+      {isMobile && (
+        <div className="mobile-tab-bar">
+          <button
+            className={activeTab === 'lesson' ? 'active' : ''}
+            onClick={() => setActiveTab('lesson')}
+          >
+            📖 Lesson
+          </button>
+          <button
+            className={activeTab === 'terminal' ? 'active' : ''}
+            onClick={() => setActiveTab('terminal')}
+          >
+            💻 Terminal
+          </button>
+        </div>
+      )}
+      <div
+        className={`content-panel${isMobile && activeTab !== 'lesson' ? ' mobile-hidden' : ''}`}
+        style={isMobile ? undefined : { width: `${contentWidth}%` }}
       >
         <div className="session-nav">
             <div className="session-buttons">
@@ -100,6 +171,9 @@ const lessons = {
             ))}
             </div>
           <div className="nav-actions">
+            <button className="feedback-button" onClick={() => setShowFeedback(true)}>
+            💬 Feedback
+            </button>
             <button className="theme-toggle" onClick={toggleTheme}>
               {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
             </button>
@@ -120,10 +194,17 @@ const lessons = {
         className="divider"
         onMouseDown={handleMouseDown}
       />
-      
-      <div 
-        className="terminal-panel"
-        style={{ width: `${100 - contentWidth}%` }}
+      {showFeedback && (
+        <div className="feedback-overlay" onClick={() => setShowFeedback(false)}>
+          <div className="feedback-modal" onClick={e => e.stopPropagation()}>
+            <h3>Send Feedback</h3>
+            <FeedbackForm onClose={() => setShowFeedback(false)} />
+          </div>
+        </div>
+      )}
+      <div
+        className={`terminal-panel${isMobile && activeTab !== 'terminal' ? ' mobile-hidden' : ''}`}
+        style={isMobile ? undefined : { width: `${100 - contentWidth}%` }}
       >
         <Terminal sessionRef={sessionRef} />
       </div>

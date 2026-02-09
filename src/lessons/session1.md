@@ -17,6 +17,17 @@ Special shortcuts:
 - `~` = your home directory
 
 ---
+💡**Windows equivalent**: This is just like Windows File Explorer, except instead of clicking through folders visually, you're typing the path. The `C:\` drive in Windows is like Unix's `/` root.
+
+---
+
+**Path comparison**:
+- Windows: `C:\Users\YourName\Documents\notes.txt`
+- Unix: `/home/user/documents/notes.txt`
+
+Both describe the same thing - a complete address to find your file.
+
+---
 
 ## Core Commands
 
@@ -24,7 +35,7 @@ Special shortcuts:
 Shows where you are right now.
 ```bash
 pwd
-# Output: /home/user/projects
+# Output: /home/user
 ```
 
 **When to use**: Lost? Always start with `pwd`.

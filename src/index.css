@@ -4,10 +4,12 @@
   box-sizing: border-box;
 }
 
-body {
+html, body {
+  height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background-color: #1e1e1e;
   overflow: hidden;
+  -webkit-text-size-adjust: 100%;
 }
 
 /* Ensure xterm takes full space */
