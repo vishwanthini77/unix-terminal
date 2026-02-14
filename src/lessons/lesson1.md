@@ -127,7 +127,7 @@ Try these in the terminal:
 7. **Hidden files**: Run `tree -a` — notice the dotfiles (`.bashrc`, `.profile`) that appear
 8. **Specific folder**: Run `tree scripts` to see what's inside the scripts folder
 9. **Navigate**: Now that you have the overall tree us `cd ..` to practice moving up/down
-10. **Create & verify**: Run `mkdir -p test/session1/practice` then `tree test` to see what you built
+10. **Create & verify**: Run `mkdir -p test/lesson1/practice` then `tree test` to see what you built
 
 ---
 

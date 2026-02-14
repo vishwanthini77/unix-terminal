@@ -60,12 +60,12 @@ src/
     SplitLayout.css        # Layout styles, themes, mobile responsive
     Terminal.jsx            # xterm.js terminal wrapper
   lessons/
-    session0.md            # Overview
-    session1.md            # Lesson 1: Navigation
-    session2.md            # Lesson 2: File Operations
-    session3.md            # Lesson 3: Search & Text
-    session4.md            # Lesson 4: Permissions & System
-    session5.md            # Lesson 5: Putting It All Together
+    lesson0.md            # Overview
+    lesson1.md            # Lesson 1: Navigation
+    lesson2.md            # Lesson 2: File Operations
+    lesson3.md            # Lesson 3: Search & Text
+    lesson4.md            # Lesson 4: Permissions & System
+    lesson5.md            # Lesson 5: Putting It All Together
 ```
 
 ## Getting Started

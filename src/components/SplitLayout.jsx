@@ -5,12 +5,12 @@ import Terminal from './Terminal';
 import './SplitLayout.css';
 import { loadCurrentSession, saveCurrentSession, loadTheme, saveTheme, resetAll } from '../storage';
 import { resetFileSystem } from '../fileSystem';
-import session0 from '../lessons/session0.md?raw';
-import session1 from '../lessons/session1.md?raw';
-import session2 from '../lessons/session2.md?raw';
-import session3 from '../lessons/session3.md?raw';
-import session4 from '../lessons/session4.md?raw';
-import session5 from '../lessons/session5.md?raw';
+import lesson0 from '../lessons/lesson0.md?raw';
+import lesson1 from '../lessons/lesson1.md?raw';
+import lesson2 from '../lessons/lesson2.md?raw';
+import lesson3 from '../lessons/lesson3.md?raw';
+import lesson4 from '../lessons/lesson4.md?raw';
+import lesson5 from '../lessons/lesson5.md?raw';
 import { useForm, ValidationError } from '@formspree/react';
 
 function FeedbackForm({ onClose }) {
@@ -71,12 +71,12 @@ function SplitLayout() {
   sessionRef.current.set = setCurrentSession;
 
 const lessons = {
-  0: session0,
-  1: session1,
-  2: session2,
-  3: session3,
-  4: session4,
-  5: session5
+  0: lesson0,
+  1: lesson1,
+  2: lesson2,
+  3: lesson3,
+  4: lesson4,
+  5: lesson5
 };
 
   const lessonContentRef = useRef(null);
